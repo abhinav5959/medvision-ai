@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+torch
+torchvision
+opencv-python
+grad-cam
+google-genai
+pillow
