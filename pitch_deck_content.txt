@@ -1,0 +1,191 @@
+HACK X '26 – FINAL PITCH DECK CONTENT: MEDVISION AI
+================================================================================
+
+--------------------------------------------------------------------------------
+SLIDE 1: TITLE SLIDE
+--------------------------------------------------------------------------------
+[Slide Title]
+MedVision AI: Production-grade Explainable AI-Powered Orthopedic Decision Support Platform
+
+[Team Details]
+• Team Name: [Insert Team Name]
+• Team Members: [Insert Member Names]
+• Institution: [Insert Institution Name]
+• Mentor: [Insert Mentor Name, if any]
+
+[Visual Outline]
+Clean, dark-mode medical UI background with a glowing neural network pattern 
+overlaying a digital X-ray scan.
+
+--------------------------------------------------------------------------------
+SLIDE 2: PROBLEM STATEMENT
+--------------------------------------------------------------------------------
+[Key Points]
+• Diagnostic Delay & Errors: In busy emergency departments, patients wait hours 
+  for an on-call radiologist to review X-rays. 
+• Missed Fractures: Missed or misdiagnosed fractures (especially hairline or 
+  non-displaced fractures) make up to 80% of all diagnostic errors in emergency 
+  medicine.
+• Severe Consequences: Diagnostic delays or missed fractures lead to chronic pain, 
+  improper healing (malunion), and expensive medical malpractice liabilities.
+• Demographic Impact: Community clinics, rural hospitals, and underfunded centers 
+  face acute shortages of imaging specialists.
+
+[Supporting Facts & Stats]
+• Up to 10% of emergency department bone fractures are initially missed or misread.
+• Musculoskeletal conditions affect over 1.7 billion people globally.
+• Radiologist burnout has increased by 40% over the last decade, leading to longer 
+  backlogs.
+
+--------------------------------------------------------------------------------
+SLIDE 3: ROOT CAUSE ANALYSIS
+--------------------------------------------------------------------------------
+[Key Causes]
+• Manual Triaging Bottlenecks: Emergency physicians must triage scans without 
+  immediate specialist verification.
+• Plain Film Limitations: Subtle cracks (e.g. hairline, greenstick, oblique) 
+  are difficult to detect with the naked eye under poor lighting.
+• "Black-Box" AI Hesitancy: Existing AI screening tools output a simple "Yes/No" 
+  percentage. Doctors do not trust tools that cannot explain *why* they flagged a scan.
+• Input Quality Variation: Blurry, dark, low-resolution, or cropped scans 
+  frequently break model predictions, leading to unreliable results.
+
+--------------------------------------------------------------------------------
+SLIDE 4: PROPOSED SOLUTION
+--------------------------------------------------------------------------------
+[Overview]
+MedVision AI is an explainable, model-agnostic, and production-ready decision-support 
+API that combines Computer Vision with Large Language Models to deliver safe, transparent, 
+and multi-disciplinary diagnostic reports.
+
+[Key Features]
+1. Image Quality Gatekeeper: Real-time OpenCV analysis checks resolution, contrast, 
+   blur, and brightness, blocking bad inputs before inference.
+2. Dual-Stage Vision Pipeline: Custom ResNet-50 models run binary fracture detection 
+   and 12-class fracture classification (e.g., Comminuted, Spiral, Hairline).
+3. Grad-CAM Explainability: Highlights the exact coordinates where the model 
+   visualizes structural fractures.
+4. Structured Medical Debate: Generates distinct clinical perspectives from 
+   virtual specialist personas (Radiologist, Surgeon, Emergency Physician).
+5. Interactive Reasoning Timeline: Visualizes the pipeline's diagnostic stages 
+   ("What Changed My Mind?").
+
+[Value Proposition]
+Empowers non-specialist physicians with real-time, explainable diagnostic confidence 
+and patient stabilization guidelines within seconds.
+
+--------------------------------------------------------------------------------
+SLIDE 5: SYSTEM ARCHITECTURE
+--------------------------------------------------------------------------------
+[Workflow Diagram Description]
+[ Patient X-Ray ] 
+   │
+   ▼
+[ OpenCV Quality Check ] ───(Failed)───► [ Return Error & Recommendations ]
+   │ (Passes)
+   ▼
+[ PyTorch ResNet-50 Binary Detector ] ───(Not Fractured)───► [ Clean Report ]
+   │ (Suspected Fracture)
+   ▼
+[ PyTorch ResNet-50 Type Classifier ] 
+   │
+   ▼
+[ PyTorch Grad-CAM Explainability Engine ] (Generates Heatmap Overlay)
+   │
+   ▼
+[ Gemini 3.5 Clinical Advisory Service ] (Assembles Debate, Timeline, & Consensus)
+   │
+   ▼
+[ FastAPI Structured JSON ] ───► [ Next.js Premium Dashboard ]
+
+[Software Integration]
+• REST API: Built with FastAPI, using Pydantic schemas and Uvicorn.
+• Model Caching: Memory-efficient sequential model swapping optimized for 
+  low-memory environments (garbage collected to fit in 512MB RAM).
+• Frontend: Premium Next.js & Tailwind CSS app.
+
+--------------------------------------------------------------------------------
+SLIDE 6: PROTOTYPE / DEMO
+--------------------------------------------------------------------------------
+[Prototype Features]
+• Drag-and-Drop Image Uploader: User-friendly interface supporting PNG/JPG scans.
+• Live Grad-CAM Overlay: Displays glowing heatmaps showing exact anomaly regions.
+• Triple-Panel Medical Discussion UI: Renders Radiologist, Orthopedic Surgeon, 
+  and Emergency Physician opinions.
+• "What Changed My Mind?" Timeline: Interactive visual roadmap of diagnostic steps.
+• Self-Documenting API: Live Swagger UI running at `/docs`.
+
+[Functionality Highlight]
+• Early Exit Quality check returns:
+  `{ "analysis_possible": false, "reason": "Resolution too low (10x10px)" }`
+• Successful inference delivers structured, type-safe JSON.
+
+--------------------------------------------------------------------------------
+SLIDE 7: USE CASES & TARGET USERS
+--------------------------------------------------------------------------------
+[Primary Users]
+• Emergency Room Physicians: Immediate decision support for critical casting or 
+  referral decisions.
+• General Practitioners & Rural Clinics: Provides expertise in facilities lacking 
+  on-site radiologists.
+• Triage Nurses: Rapid sorting of patients based on preliminary fracture findings.
+
+[Scalability Across Industries]
+• Model-Agnostic Design: The architecture is structured to support other modalities 
+  (Brain MRI, Chest X-Rays, Mammograms, Kidney/Liver Scans) without changing 
+  the frontend layout.
+• Hospital Management Systems (PACS/DICOM): Easily integrates into existing clinical 
+  workflows via standard REST endpoints.
+
+--------------------------------------------------------------------------------
+SLIDE 8: IMPACT & FUTURE SCOPE
+--------------------------------------------------------------------------------
+[Social Impact]
+• Democratizes medical imaging expertise, bringing radiologist-level support to 
+  underserved and remote communities.
+• Reduces patient anxiety by providing immediate, transparent, and educational explanations.
+
+[Economic Impact]
+• Reduces hospital operational bottlenecks and diagnostic turnaround times.
+• Minimizes malpractice insurance claims and costly lawsuit liabilities from missed injuries.
+
+[Future Scope]
+• Integration of DICOM medical image parsing.
+• Expanding models to cover joint dislocations, arthritis, and ligament tears.
+• Federating model training across multiple institutions to improve safety and accuracy.
+
+--------------------------------------------------------------------------------
+SLIDE 9: CHALLENGES & RISK MITIGATION
+--------------------------------------------------------------------------------
+[Technical Risks & Mitigation]
+• Model Hallucinations: 
+  *Mitigation*: Gemini is strictly constrained using Pydantic structured output 
+  schemas based directly on PyTorch vision model inputs.
+• Input Noise / Bad Scans:
+  *Mitigation*: OpenCV pre-inference quality checks reject blurry or low-resolution 
+  images before they reach the models.
+• Low-Memory Cloud Server Crashes:
+  *Mitigation*: Re-architected model lifecycle to run sequential loading and unloading, 
+  avoiding concurrent RAM spikes.
+
+[Security & Privacy]
+• HIPAA Compliance: De-identifies images on upload; no Patient Health Information (PHI) 
+  is processed or retained.
+
+--------------------------------------------------------------------------------
+SLIDE 10: CONCLUSION & Q&A
+--------------------------------------------------------------------------------
+[Summary]
+• Problem: Overworked ERs and high diagnostic errors from missed hairline fractures.
+• Solution: MedVision AI - a production-grade, explainable AI platform with dual-stage 
+  classifiers and structured multi-specialist debates.
+• Innovation: Pre-inference quality checks, explainability maps, and a structured, 
+  non-hallucinatory clinical debate consensus.
+• Impact: Faster triaging, reduced diagnostic errors, and accessible specialist insights 
+  for every community.
+
+[Closing]
+MedVision AI: Making AI understandable, reliable, and deployable in clinical medicine.
+
+Thank you! Open for Questions.
+================================================================================

@@ -15,7 +15,7 @@ services:
 
   backend:
     build:
-      context: ./backend/backend
+      context: ./backend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
@@ -23,4 +23,4 @@ services:
       - PORT=8000
     restart: unless-stopped
     volumes:
-      - ./backend/backend/weights:/app/weights
+      - ./backend/weights:/app/weights
