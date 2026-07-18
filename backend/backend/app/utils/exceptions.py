@@ -13,7 +13,7 @@ class APIException(Exception):
         super().__init__(message)
 
 async def api_exception_handler(request: Request, exc: APIException):
-    return JSONResponse(
+    response = JSONResponse(
         status_code=exc.status_code,
         content={
             "success": False,
@@ -22,11 +22,13 @@ async def api_exception_handler(request: Request, exc: APIException):
             "possible_solution": exc.possible_solution
         }
     )
+    # Add CORS header manually since exception handlers bypass middleware
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    # Simplify error detail for the response
     errors_str = "; ".join([f"{'.'.join(str(loc) for loc in err['loc'])}: {err['msg']}" for err in exc.errors()])
-    return JSONResponse(
+    response = JSONResponse(
         status_code=422,
         content={
             "success": False,
@@ -35,6 +37,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "possible_solution": "Ensure that the uploaded fields and types match the API schema."
         }
     )
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 async def starlette_http_exception_handler(request: Request, exc: StarletteHTTPException):
     solutions = {
@@ -43,7 +47,7 @@ async def starlette_http_exception_handler(request: Request, exc: StarletteHTTPE
         413: "Verify that the uploaded image size does not exceed server limits.",
         500: "Ensure the API environment keys are configured and PyTorch weights loaded."
     }
-    return JSONResponse(
+    response = JSONResponse(
         status_code=exc.status_code,
         content={
             "success": False,
@@ -52,3 +56,5 @@ async def starlette_http_exception_handler(request: Request, exc: StarletteHTTPE
             "possible_solution": solutions.get(exc.status_code, "Review server log files for traceback information.")
         }
     )
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
