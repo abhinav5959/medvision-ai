@@ -1,41 +1,34 @@
 import sys
 import os
-import gc
-import torch
-from PIL import Image
-import numpy as np
-import cv2
-import base64
+import subprocess
+import json
 from app.config import settings
-from app.ai.loader import load_binary_model, load_type_model, unload_model
-
-# Ensure parent directory is in path for original inference.py
-sys.path.append(settings.BASE_DIR)
-import inference
 
 def run_vision_inference(image_path: str) -> dict:
     """
-    Executes the PyTorch ResNet-50 pipeline sequentially.
-    Loads and runs the binary detector first, unloads it, then loads and runs the subclass classifier.
-    This keeps peak RAM usage below the 512MB limit of Render's free tier.
+    Executes the PyTorch ResNet-50 pipeline using separate child subprocesses.
+    Each subprocess runs one model and exits, which releases 100% of the allocated memory back to the OS.
+    This guarantees peak RAM stays well below the 512MB limit of Render's free tier.
     """
-    # Force initial garbage collection
-    gc.collect()
+    # Path to the standalone inference runner
+    script_path = os.path.join(settings.BASE_DIR, "app", "ai", "run_sub.py")
     
-    # 1. Load and run binary model
-    binary_model = load_binary_model()
+    # 1. Run binary detection in subprocess
+    cmd_binary = [
+        sys.executable,
+        script_path,
+        "--mode", "binary",
+        "--image", image_path,
+        "--weights", settings.BINARY_WEIGHTS
+    ]
     
-    img = Image.open(image_path).convert('RGB')
-    input_tensor = inference.infer_transforms(img).unsqueeze(0).to(inference.DEVICE)
-    
-    with torch.no_grad():
-        binary_out = binary_model(input_tensor)
-        binary_pred = torch.argmax(binary_out, dim=1).item()
-        status = inference.BINARY_CLASSES[binary_pred]
-        confidence = torch.softmax(binary_out, dim=1)[0][binary_pred].item()
+    result = subprocess.run(cmd_binary, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"Binary detector subprocess failed: {result.stderr}")
         
-    # Unload binary model immediately
-    unload_model(binary_model)
+    binary_data = json.loads(result.stdout.strip())
+    status = binary_data["status"]
+    confidence = binary_data["confidence"]
     
     if status == 'not fractured':
         return {
@@ -46,48 +39,26 @@ def run_vision_inference(image_path: str) -> dict:
             "gradcam_saved": False
         }
         
-    # 2. Load and run fracture type model
-    type_model = load_type_model()
+    # 2. Run fracture type classification + Grad-CAM in subprocess
+    cmd_type = [
+        sys.executable,
+        script_path,
+        "--mode", "type",
+        "--image", image_path,
+        "--weights", settings.TYPE_WEIGHTS
+    ]
     
-    with torch.no_grad():
-        type_out = type_model(input_tensor)
-        type_pred = torch.argmax(type_out, dim=1).item()
-        predicted_type = inference.TYPE_CLASSES[type_pred]
-        type_confidence = torch.softmax(type_out, dim=1)[0][type_pred].item()
-
-    # Execute Grad-CAM generation safely using the context manager to release hooks immediately
-    gradcam_data_uri = ""
-    gradcam_saved = False
-    try:
-        img_resized = img.resize((224, 224))
-        rgb_img = np.float32(img_resized) / 255.0
-        target_layers = [type_model.layer4[-1]]
+    result_type = subprocess.run(cmd_type, capture_output=True, text=True)
+    if result_type.returncode != 0:
+        raise RuntimeError(f"Fracture type subprocess failed: {result_type.stderr}")
         
-        with inference.GradCAM(model=type_model, target_layers=target_layers) as cam:
-            grayscale_cam = cam(input_tensor=input_tensor, targets=[inference.ClassifierOutputTarget(type_pred)])[0, :]
-            
-        visualization = inference.show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
-        
-        # Encode the Grad-CAM heatmap directly to Base64
-        _, buffer = cv2.imencode('.png', cv2.cvtColor(visualization * 255, cv2.COLOR_RGB2BGR))
-        gradcam_base64 = base64.b64encode(buffer).decode('utf-8')
-        gradcam_data_uri = f"data:image/png;base64,{gradcam_base64}"
-        gradcam_saved = True
-        
-        # Clean up temporary variables
-        del img_resized, rgb_img, grayscale_cam, visualization, buffer, gradcam_base64
-    except Exception as e:
-        print(f"Failed to generate Grad-CAM: {e}")
-        
-    # Unload type model immediately and force garbage collection
-    unload_model(type_model)
-    gc.collect()
+    type_data = json.loads(result_type.stdout.strip())
     
     return {
         "fracture_detected": True,
         "binary_confidence": confidence,
-        "fracture_type": predicted_type,
-        "classification_confidence": type_confidence,
-        "gradcam_saved": gradcam_saved,
-        "gradcam_data_uri": gradcam_data_uri
+        "fracture_type": type_data["fracture_type"],
+        "classification_confidence": type_data["confidence"],
+        "gradcam_saved": type_data["gradcam_saved"],
+        "gradcam_data_uri": type_data.get("gradcam_data_uri", "")
     }
