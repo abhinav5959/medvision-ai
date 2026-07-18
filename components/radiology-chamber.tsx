@@ -231,7 +231,7 @@ export function RadiologyChamber({ fileName, detectedModality, detectedOrganKey,
                 style={{ filter: 'drop-shadow(0 0 4px rgba(59,130,246,0.6))' }}
               />
               {[1, 2, 3].map((i) => (
-                <motion.circle key={i} r={2} fill="#22d3ee" style={{ filter: 'drop-shadow(0 0 6px #22d3ee)' }}
+                <motion.circle key={i} cx="50%" cy="50%" r={2} fill="#22d3ee" style={{ filter: 'drop-shadow(0 0 6px #22d3ee)' }}
                   animate={{ cx: ['50%', '72%', '30%'], cy: ['50%', '32%', '55%'] }}
                   transition={{ duration: 3, repeat: Infinity, delay: i * 0.8, ease: 'linear' }}
                 />
