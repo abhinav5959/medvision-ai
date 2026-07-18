@@ -12,7 +12,8 @@ export const analyzeOrthopedicScan = async (file: File): Promise<AnalysisResult>
   const formData = new FormData()
   formData.append('file', file)
 
-  const response = await fetch('/api/v1/orthopedics/analyze', {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+  const response = await fetch(`${apiUrl}/api/v1/orthopedics/analyze`, {
     method: 'POST',
     body: formData,
   })

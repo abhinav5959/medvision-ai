@@ -26,8 +26,15 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files
+.env
 .env*.local
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# backend
+backend/backend/temp/
+backend/backend/__pycache__/
+backend/backend/static/
+backend/backend/.pytest_cache/
