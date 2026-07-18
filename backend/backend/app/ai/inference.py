@@ -55,28 +55,39 @@ def run_vision_inference(image_path: str) -> dict:
         predicted_type = inference.TYPE_CLASSES[type_pred]
         type_confidence = torch.softmax(type_out, dim=1)[0][type_pred].item()
 
-    # Execute Grad-CAM generation
-    img_resized = img.resize((224, 224))
-    rgb_img = np.float32(img_resized) / 255.0
-    target_layers = [type_model.layer4[-1]]
-    
-    cam = inference.GradCAM(model=type_model, target_layers=target_layers)
-    grayscale_cam = cam(input_tensor=input_tensor, targets=[inference.ClassifierOutputTarget(type_pred)])[0, :]
-    visualization = inference.show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
-    
-    # Encode the Grad-CAM heatmap directly to Base64
-    _, buffer = cv2.imencode('.png', cv2.cvtColor(visualization * 255, cv2.COLOR_RGB2BGR))
-    gradcam_base64 = base64.b64encode(buffer).decode('utf-8')
-    gradcam_data_uri = f"data:image/png;base64,{gradcam_base64}"
-    
-    # Unload type model immediately
+    # Execute Grad-CAM generation safely using the context manager to release hooks immediately
+    gradcam_data_uri = ""
+    gradcam_saved = False
+    try:
+        img_resized = img.resize((224, 224))
+        rgb_img = np.float32(img_resized) / 255.0
+        target_layers = [type_model.layer4[-1]]
+        
+        with inference.GradCAM(model=type_model, target_layers=target_layers) as cam:
+            grayscale_cam = cam(input_tensor=input_tensor, targets=[inference.ClassifierOutputTarget(type_pred)])[0, :]
+            
+        visualization = inference.show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
+        
+        # Encode the Grad-CAM heatmap directly to Base64
+        _, buffer = cv2.imencode('.png', cv2.cvtColor(visualization * 255, cv2.COLOR_RGB2BGR))
+        gradcam_base64 = base64.b64encode(buffer).decode('utf-8')
+        gradcam_data_uri = f"data:image/png;base64,{gradcam_base64}"
+        gradcam_saved = True
+        
+        # Clean up temporary variables
+        del img_resized, rgb_img, grayscale_cam, visualization, buffer, gradcam_base64
+    except Exception as e:
+        print(f"Failed to generate Grad-CAM: {e}")
+        
+    # Unload type model immediately and force garbage collection
     unload_model(type_model)
+    gc.collect()
     
     return {
         "fracture_detected": True,
         "binary_confidence": confidence,
         "fracture_type": predicted_type,
         "classification_confidence": type_confidence,
-        "gradcam_saved": True,
+        "gradcam_saved": gradcam_saved,
         "gradcam_data_uri": gradcam_data_uri
     }
