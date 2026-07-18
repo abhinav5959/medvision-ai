@@ -4,9 +4,8 @@ import uuid
 from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, BackgroundTasks
 from app.config import settings
-from app.utils.image_quality import evaluate_image_quality
 from app.utils.exceptions import APIException
-from app.ai.inference import run_vision_inference
+from app.ai.inference import run_vision_inference, run_quality_inference
 from app.services.gemini_service import get_gemini_analysis, get_clean_scan_analysis
 from app.schemas.analysis import (
     AnalysisResponse, QualityAssessment, Investigation, Explainability
@@ -72,7 +71,7 @@ async def analyze_orthopedics(
     background_tasks.add_task(cleanup_file, temp_filepath)
     
     # 1. Image Quality Assessment Check
-    quality_result = evaluate_image_quality(temp_filepath)
+    quality_result = run_quality_inference(temp_filepath)
     quality_assessment = QualityAssessment(
         analysis_possible=quality_result["analysis_possible"],
         reason=quality_result["reason"],

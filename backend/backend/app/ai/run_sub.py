@@ -31,6 +31,71 @@ TYPE_CLASSES = [
     'Oblique fracture', 'Pathological fracture', 'Spiral Fracture'
 ]
 
+def run_quality(image_path):
+    """Evaluates image quality metrics using OpenCV to block low-quality inputs."""
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        print(json.dumps({
+            "analysis_possible": False,
+            "reason": "Failed to read the image file.",
+            "recommendation": "Please upload a valid image file in standard format (PNG, JPG, JPEG)."
+        }))
+        return
+
+    height, width = img.shape
+    
+    # 1. Check Resolution
+    if width < 150 or height < 150:
+        print(json.dumps({
+            "analysis_possible": False,
+            "reason": f"Resolution too low ({width}x{height}px). Minimum required is 150x150px.",
+            "recommendation": "Please upload a higher-resolution digital scan."
+        }))
+        return
+
+    # 2. Check Blur (Variance of Laplacian)
+    laplacian_var = cv2.Laplacian(img, cv2.CV_64F).var()
+    if laplacian_var < 10.0:
+        print(json.dumps({
+            "analysis_possible": False,
+            "reason": f"Image is too blurry (Blur metric: {laplacian_var:.2f}).",
+            "recommendation": "Please ensure the scan is in-focus and not motion-blurred."
+        }))
+        return
+
+    # 3. Check Brightness (Mean intensity)
+    mean_brightness = np.mean(img)
+    if mean_brightness < 15:
+        print(json.dumps({
+            "analysis_possible": False,
+            "reason": f"Image is too dark (Average intensity: {mean_brightness:.1f}).",
+            "recommendation": "Please upload a properly exposed scan with better contrast."
+        }))
+        return
+    elif mean_brightness > 240:
+        print(json.dumps({
+            "analysis_possible": False,
+            "reason": f"Image is too bright or washed out (Average intensity: {mean_brightness:.1f}).",
+            "recommendation": "Please upload a scan that is not overexposed or blank."
+        }))
+        return
+
+    # 4. Check Contrast / Cropping (Standard Deviation of pixels)
+    std_brightness = np.std(img)
+    if std_brightness < 10.0:
+        print(json.dumps({
+            "analysis_possible": False,
+            "reason": f"Image contrast is too low (Standard deviation: {std_brightness:.1f}). Image may be flat or blank.",
+            "recommendation": "Please verify the image is a valid X-Ray scan and not an empty placeholder."
+        }))
+        return
+
+    print(json.dumps({
+        "analysis_possible": True,
+        "reason": None,
+        "recommendation": None
+    }))
+
 def run_binary(image_path, weights_path):
     binary_model = models.resnet50()
     binary_model.fc = nn.Linear(binary_model.fc.in_features, 2)
@@ -95,12 +160,14 @@ def run_type(image_path, weights_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", required=True, choices=["binary", "type"])
+    parser.add_argument("--mode", required=True, choices=["quality", "binary", "type"])
     parser.add_argument("--image", required=True)
-    parser.add_argument("--weights", required=True)
+    parser.add_argument("--weights", required=False, default="")
     args = parser.parse_args()
     
-    if args.mode == "binary":
+    if args.mode == "quality":
+        run_quality(args.image)
+    elif args.mode == "binary":
         run_binary(args.image, args.weights)
     elif args.mode == "type":
         run_type(args.image, args.weights)

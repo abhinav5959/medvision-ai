@@ -4,13 +4,29 @@ import subprocess
 import json
 from app.config import settings
 
+def run_quality_inference(image_path: str) -> dict:
+    """
+    Executes OpenCV image quality checks in a brief child subprocess.
+    This keeps OpenCV memory completely isolated from the parent FastAPI process.
+    """
+    script_path = os.path.join(settings.BASE_DIR, "app", "ai", "run_sub.py")
+    cmd = [
+        sys.executable,
+        script_path,
+        "--mode", "quality",
+        "--image", image_path
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"Image quality subprocess failed: {result.stderr}")
+    return json.loads(result.stdout.strip())
+
 def run_vision_inference(image_path: str) -> dict:
     """
     Executes the PyTorch ResNet-50 pipeline using separate child subprocesses.
     Each subprocess runs one model and exits, which releases 100% of the allocated memory back to the OS.
     This guarantees peak RAM stays well below the 512MB limit of Render's free tier.
     """
-    # Path to the standalone inference runner
     script_path = os.path.join(settings.BASE_DIR, "app", "ai", "run_sub.py")
     
     # 1. Run binary detection in subprocess

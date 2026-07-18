@@ -1,8 +1,3 @@
-import torch
-# Restrict PyTorch to single-thread execution to save memory in 512MB RAM environments
-torch.set_num_threads(1)
-torch.set_num_interop_threads(1)
-
 from fastapi import FastAPI, BackgroundTasks, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
