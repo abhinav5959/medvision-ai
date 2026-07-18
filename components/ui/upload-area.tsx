@@ -114,7 +114,7 @@ export const UploadArea = React.forwardRef<HTMLDivElement, UploadAreaProps>(
           currentError && 'border-critical/60 shadow-[0_0_24px_rgba(251,87,121,0.3)]',
           className,
         )}
-        {...props}
+        {...(props as any)}
       >
         {/* Corner brackets */}
         {[

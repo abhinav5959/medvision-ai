@@ -59,7 +59,7 @@ export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
           text,
           className,
         )}
-        {...props}
+        {...(props as any)}
       >
         <div className="flex-shrink-0 mt-0.5">
           {icon || <DefaultIcon className="h-4.5 w-4.5" />}

@@ -5,7 +5,7 @@ import { motion } from 'motion/react'
 import { BrainCircuit, Layers, Cpu, ScanLine } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type AiStateStatus = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'CONNECTED' | 'ONLINE'
+export type AiStateStatus = 'IDLE' | 'SCANNING' | 'ANALYZING' | 'CONNECTED' | 'ONLINE' | 'ERROR'
 
 export interface AiStatusCardProps extends React.HTMLAttributes<HTMLDivElement> {
   status?: AiStateStatus
@@ -42,6 +42,8 @@ export const AiStatusCard = React.forwardRef<HTMLDivElement, AiStatusCardProps>(
       'Output',
     ]
 
+    const isCardError = status === 'ERROR'
+
     return (
       <div
         ref={ref}
@@ -50,21 +52,24 @@ export const AiStatusCard = React.forwardRef<HTMLDivElement, AiStatusCardProps>(
       >
         {/* Header */}
         <div className="flex items-center gap-2">
-          <BrainCircuit className="h-5 w-5 text-cyan" />
+          <BrainCircuit className={cn("h-5 w-5", isCardError ? "text-critical animate-pulse" : "text-cyan")} />
           <h3 className="font-display text-lg font-semibold">AI Thinking</h3>
           <motion.span
-            className="ml-auto text-[10px] font-mono text-cyan/70 uppercase tracking-widest flex items-center gap-1.5"
+            className={cn(
+              "ml-auto text-[10px] font-mono uppercase tracking-widest flex items-center gap-1.5",
+              isCardError ? "text-critical" : "text-cyan/70"
+            )}
             animate={{ opacity: [0.4, 1, 0.4] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
-            <span className="h-2 w-2 rounded-full bg-cyan" />
+            <span className={cn("h-2 w-2 rounded-full", isCardError ? "bg-critical" : "bg-cyan")} />
             {status}
           </motion.span>
         </div>
 
         {/* Confidence Display */}
         <div className="text-center py-2">
-          <div className="font-mono text-5xl font-bold text-cyan animate-confidence-glow">
+          <div className={cn("font-mono text-5xl font-bold", isCardError ? "text-critical" : "text-cyan animate-confidence-glow")}>
             {confidence.toFixed(1)}%
           </div>
           <div className="mt-1 text-xs text-muted-foreground font-mono uppercase tracking-wider">

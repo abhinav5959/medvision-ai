@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { motion } from 'motion/react'
-import { CheckCircle2, Circle, Loader2 } from 'lucide-react'
+import { CheckCircle2, Circle, Loader2, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface TimelineProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -20,7 +20,7 @@ export const Timeline = React.forwardRef<HTMLDivElement, TimelineProps>(
 )
 Timeline.displayName = 'Timeline'
 
-export type TimelineStepStatus = 'completed' | 'active' | 'pending'
+export type TimelineStepStatus = 'completed' | 'active' | 'pending' | 'error'
 
 export interface TimelineStepProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string
@@ -35,6 +35,7 @@ export const TimelineStep = React.forwardRef<HTMLDivElement, TimelineStepProps>(
     const isCompleted = status === 'completed'
     const isActive = status === 'active'
     const isPending = status === 'pending'
+    const isError = status === 'error'
 
     return (
       <motion.div
@@ -44,14 +45,16 @@ export const TimelineStep = React.forwardRef<HTMLDivElement, TimelineStepProps>(
         transition={{ duration: 0.4, delay: index * 0.04 }}
         className={cn(
           'flex items-center gap-3 rounded-xl px-4 py-2.5 transition-all duration-300 select-none',
-          isActive ? 'glass glow-ring-cyan' : isCompleted ? 'bg-white/[0.02]' : 'bg-transparent',
+          isActive ? 'glass glow-ring-cyan' : isCompleted ? 'bg-white/[0.02]' : isError ? 'bg-critical/5 border border-critical/20' : 'bg-transparent',
           className,
         )}
-        {...props}
+        {...(props as any)}
       >
         <div className="flex-shrink-0">
           {isCompleted ? (
             <CheckCircle2 className="h-4.5 w-4.5 text-emerald" />
+          ) : isError ? (
+            <XCircle className="h-4.5 w-4.5 text-critical" />
           ) : isActive ? (
             <Loader2 className="h-4.5 w-4.5 text-cyan animate-spin" />
           ) : (
@@ -62,7 +65,7 @@ export const TimelineStep = React.forwardRef<HTMLDivElement, TimelineStepProps>(
           <span
             className={cn(
               'text-sm transition-colors',
-              isCompleted ? 'text-muted-foreground' : isActive ? 'text-foreground font-medium' : 'text-muted-foreground/40',
+              isCompleted ? 'text-muted-foreground' : isActive ? 'text-foreground font-medium' : isError ? 'text-critical' : 'text-muted-foreground/40',
             )}
           >
             {title}
@@ -76,7 +79,7 @@ export const TimelineStep = React.forwardRef<HTMLDivElement, TimelineStepProps>(
             <span className="text-[10px] font-mono text-muted-foreground/60">{timestamp}</span>
           )}
           <span className="text-xs font-mono text-muted-foreground/40">
-            {isCompleted ? '✓' : isActive ? '...' : ''}
+            {isCompleted ? '✓' : isActive ? '...' : isError ? '✗' : ''}
           </span>
         </div>
       </motion.div>

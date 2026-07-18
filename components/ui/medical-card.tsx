@@ -104,7 +104,7 @@ export const MedicalCard = React.forwardRef<HTMLDivElement, MedicalCardProps>(
             ? `0 0 50px -10px ${accentHex}55, 0 0 0 1px ${accentHex}44`
             : `0 0 0 1px ${accentHex}22`,
         }}
-        {...props}
+        {...(props as any)}
       >
         {/* Hover glow border */}
         <span

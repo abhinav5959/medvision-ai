@@ -24,9 +24,10 @@ export const DialogTrigger: React.FC<{
   onClick?: () => void
   children: React.ReactElement
 }> = ({ children, onClick }) => {
-  return React.cloneElement(children, {
+  const child = children as React.ReactElement<any>
+  return React.cloneElement(child, {
     onClick: (e: React.MouseEvent) => {
-      if (children.props.onClick) children.props.onClick(e)
+      if (child.props.onClick) child.props.onClick(e)
       if (onClick) onClick()
     },
   })

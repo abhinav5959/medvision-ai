@@ -27,7 +27,7 @@ export const Chip = React.forwardRef<HTMLDivElement, ChipProps>(
             : 'border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:text-foreground hover:bg-white/10',
           className,
         )}
-        {...props}
+        {...(props as any)}
       >
         {icon && <span className="flex-shrink-0 text-current">{icon}</span>}
         <span>{children}</span>

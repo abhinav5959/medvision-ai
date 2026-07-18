@@ -148,7 +148,7 @@ export function AnalysisPipeline({ isPending, isSuccess, isError, error, onCompl
                     )}
                     {onCancel && (
                       <Button 
-                        variant="outline" 
+                        variant="secondary" 
                         size="sm" 
                         onClick={onCancel}
                         iconLeft={<XCircle className="h-4 w-4" />}

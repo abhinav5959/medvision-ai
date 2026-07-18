@@ -21,7 +21,7 @@ export const ErrorState = React.forwardRef<HTMLDivElement, ErrorStateProps>(
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         className={cn('glass-strong rounded-3xl border border-critical/40 p-8 sm:p-10 text-center flex flex-col items-center justify-center space-y-4 shadow-[0_0_30px_-6px_rgba(251,87,121,0.25)]', className)}
-        {...props}
+        {...(props as any)}
       >
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-critical/15 text-critical border border-critical/30 animate-pulse">
           <AlertCircle className="h-8 w-8" />

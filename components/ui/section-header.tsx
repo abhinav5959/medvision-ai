@@ -25,7 +25,7 @@ export const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps
           align === 'center' && 'text-center items-center sm:items-center sm:flex-col',
           className,
         )}
-        {...props}
+        {...(props as any)}
       >
         <div className={cn('space-y-3', align === 'center' && 'max-w-2xl mx-auto')}>
           {eyebrow && (
