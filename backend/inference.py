@@ -14,7 +14,7 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 # Set up runtime engine
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-BINARY_CLASSES = ['not fractured', 'fractured']
+BINARY_CLASSES = ['fractured', 'not fractured']
 TYPE_CLASSES = [
     'Avulsion fracture', 'Comminuted fracture', 'Compression-Crush fracture', 
     'Fracture Dislocation', 'Greenstick fracture', 'Hairline Fracture', 

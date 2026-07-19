@@ -43,7 +43,7 @@ interface ResultViewProps {
 }
 
 export function ResultView({ result, onNavigate }: ResultViewProps) {
-  const [mode, setMode] = useState<OverlayMode>('original')
+  const [mode, setMode] = useState<OverlayMode>(result.gradcamUrl ? 'heatmap' : 'original')
   const [zoom, setZoom] = useState(1)
   const [brightness, setBrightness] = useState(100)
   const [contrast, setContrast] = useState(100)
