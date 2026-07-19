@@ -59,7 +59,7 @@ app.add_exception_handler(StarletteHTTPException, starlette_http_exception_handl
 async def global_exception_handler(request, exc):
     import traceback
     from fastapi.responses import JSONResponse
-    return JSONResponse(
+    response = JSONResponse(
         status_code=500,
         content={
             "success": False,
@@ -68,6 +68,10 @@ async def global_exception_handler(request, exc):
             "traceback": traceback.format_exc()
         }
     )
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
 
 # Add deployment health check endpoints
 @app.get("/health", tags=["System"])
