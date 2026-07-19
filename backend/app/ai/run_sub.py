@@ -23,7 +23,7 @@ infer_transforms = transforms.Compose([
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-BINARY_CLASSES = ['fractured', 'not fractured']
+BINARY_CLASSES = ['not fractured', 'fractured']
 TYPE_CLASSES = [
     'Avulsion fracture', 'Comminuted fracture', 'Compression-Crush fracture', 
     'Fracture Dislocation', 'Greenstick fracture', 'Hairline Fracture', 

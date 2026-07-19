@@ -61,14 +61,14 @@ def run_vision_inference(image_path: str) -> dict:
         
     type_data = json.loads(result_type.stdout.strip())
     
-    # Fracture is confirmed if either binary detector or fracture type model flags high feature confidence
-    is_fracture = (status == 'fractured') or (type_data.get("confidence", 0) > 0.12)
+    # Fracture is confirmed if the binary detector outputs 'fractured'
+    is_fracture = (status == 'fractured')
     
     return {
         "fracture_detected": is_fracture,
         "binary_confidence": confidence,
         "fracture_type": type_data["fracture_type"] if is_fracture else "None",
-        "classification_confidence": type_data["confidence"],
+        "classification_confidence": type_data["confidence"] if is_fracture else 0.0,
         "gradcam_saved": type_data.get("gradcam_saved", False),
         "gradcam_data_uri": type_data.get("gradcam_data_uri", "")
     }
