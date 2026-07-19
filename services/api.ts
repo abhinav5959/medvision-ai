@@ -8,7 +8,7 @@ const getSeverityTone = (severity?: string): 'normal' | 'attention' | 'critical'
   return 'normal'
 }
 
-const PRODUCTION_BACKEND_URL = 'https://medvision-ai-production.up.railway.app'
+const PRODUCTION_BACKEND_URL = 'https://medvision-ai-production-03cd.up.railway.app'
 
 export const pingBackendWarmup = async (): Promise<boolean> => {
   let healthUrl = `${PRODUCTION_BACKEND_URL}/health`
