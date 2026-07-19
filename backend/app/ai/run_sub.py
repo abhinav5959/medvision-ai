@@ -23,7 +23,7 @@ infer_transforms = transforms.Compose([
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-BINARY_CLASSES = ['not fractured', 'fractured']
+BINARY_CLASSES = ['fractured', 'not fractured']
 TYPE_CLASSES = [
     'Avulsion fracture', 'Comminuted fracture', 'Compression-Crush fracture', 
     'Fracture Dislocation', 'Greenstick fracture', 'Hairline Fracture', 
@@ -55,38 +55,38 @@ def run_quality(image_path):
 
     # 2. Check Blur (Variance of Laplacian)
     laplacian_var = cv2.Laplacian(img, cv2.CV_64F).var()
-    if laplacian_var < 10.0:
+    if laplacian_var < 1.0:
         print(json.dumps({
             "analysis_possible": False,
-            "reason": f"Image is too blurry (Blur metric: {laplacian_var:.2f}).",
-            "recommendation": "Please ensure the scan is in-focus and not motion-blurred."
+            "reason": f"Image is completely uniform or unreadable (Blur metric: {laplacian_var:.2f}).",
+            "recommendation": "Please ensure the scan is in-focus and not blank."
         }))
         return
 
     # 3. Check Brightness (Mean intensity)
     mean_brightness = np.mean(img)
-    if mean_brightness < 15:
+    if mean_brightness < 2:
         print(json.dumps({
             "analysis_possible": False,
-            "reason": f"Image is too dark (Average intensity: {mean_brightness:.1f}).",
-            "recommendation": "Please upload a properly exposed scan with better contrast."
+            "reason": f"Image is completely black (Average intensity: {mean_brightness:.1f}).",
+            "recommendation": "Please upload a properly exposed X-Ray scan."
         }))
         return
-    elif mean_brightness > 240:
+    elif mean_brightness > 252:
         print(json.dumps({
             "analysis_possible": False,
-            "reason": f"Image is too bright or washed out (Average intensity: {mean_brightness:.1f}).",
+            "reason": f"Image is completely white or overexposed (Average intensity: {mean_brightness:.1f}).",
             "recommendation": "Please upload a scan that is not overexposed or blank."
         }))
         return
 
     # 4. Check Contrast / Cropping (Standard Deviation of pixels)
     std_brightness = np.std(img)
-    if std_brightness < 10.0:
+    if std_brightness < 2.0:
         print(json.dumps({
             "analysis_possible": False,
-            "reason": f"Image contrast is too low (Standard deviation: {std_brightness:.1f}). Image may be flat or blank.",
-            "recommendation": "Please verify the image is a valid X-Ray scan and not an empty placeholder."
+            "reason": f"Image contrast is zero (Standard deviation: {std_brightness:.1f}). Image is an empty placeholder.",
+            "recommendation": "Please verify the image is a valid X-Ray scan."
         }))
         return
 

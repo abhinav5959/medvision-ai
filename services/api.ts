@@ -62,6 +62,10 @@ export const analyzeOrthopedicScan = async (file: File): Promise<AnalysisResult>
     throw new Error('Analysis unsuccessful')
   }
 
+  if (data.quality_assessment && !data.quality_assessment.analysis_possible) {
+    throw new Error(data.quality_assessment.reason || 'Image quality assessment failed. Please upload a valid X-ray scan.')
+  }
+
   // Construct findings array from the backend response
   const findings: Finding[] = []
   if (data.investigation) {
