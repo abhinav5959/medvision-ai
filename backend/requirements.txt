@@ -4,7 +4,7 @@ python-multipart
 python-dotenv
 torch
 torchvision
-opencv-python
+opencv-python-headless
 grad-cam
 google-genai
 pillow
