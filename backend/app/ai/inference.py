@@ -46,15 +46,6 @@ def run_vision_inference(image_path: str) -> dict:
     status = binary_data["status"]
     confidence = binary_data["confidence"]
     
-    if status == 'not fractured':
-        return {
-            "fracture_detected": False,
-            "binary_confidence": confidence,
-            "fracture_type": "None",
-            "classification_confidence": 0.0,
-            "gradcam_saved": False
-        }
-        
     # 2. Run fracture type classification + Grad-CAM in subprocess
     cmd_type = [
         sys.executable,
@@ -70,11 +61,14 @@ def run_vision_inference(image_path: str) -> dict:
         
     type_data = json.loads(result_type.stdout.strip())
     
+    # Fracture is confirmed if either binary detector or fracture type model flags high feature confidence
+    is_fracture = (status == 'fractured') or (type_data.get("confidence", 0) > 0.12)
+    
     return {
-        "fracture_detected": True,
+        "fracture_detected": is_fracture,
         "binary_confidence": confidence,
-        "fracture_type": type_data["fracture_type"],
+        "fracture_type": type_data["fracture_type"] if is_fracture else "None",
         "classification_confidence": type_data["confidence"],
-        "gradcam_saved": type_data["gradcam_saved"],
+        "gradcam_saved": type_data.get("gradcam_saved", False),
         "gradcam_data_uri": type_data.get("gradcam_data_uri", "")
     }

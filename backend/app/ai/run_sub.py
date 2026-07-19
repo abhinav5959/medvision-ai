@@ -97,10 +97,9 @@ def run_quality(image_path):
     }))
 
 def run_binary(image_path, weights_path):
-    with torch.device('meta'):
-        binary_model = models.resnet50()
-        binary_model.fc = nn.Linear(binary_model.fc.in_features, 2)
-    binary_model.load_state_dict(torch.load(weights_path, map_location='cpu', mmap=True), assign=True)
+    binary_model = models.resnet50()
+    binary_model.fc = nn.Linear(binary_model.fc.in_features, 2)
+    binary_model.load_state_dict(torch.load(weights_path, map_location='cpu'))
     binary_model.eval()
     
     img = Image.open(image_path).convert('RGB')
@@ -115,10 +114,9 @@ def run_binary(image_path, weights_path):
     print(json.dumps({"status": status, "confidence": confidence}))
 
 def run_type(image_path, weights_path):
-    with torch.device('meta'):
-        type_model = models.resnet50()
-        type_model.fc = nn.Linear(type_model.fc.in_features, 12)
-    type_model.load_state_dict(torch.load(weights_path, map_location='cpu', mmap=True), assign=True)
+    type_model = models.resnet50()
+    type_model.fc = nn.Linear(type_model.fc.in_features, 12)
+    type_model.load_state_dict(torch.load(weights_path, map_location='cpu'))
     type_model.eval()
     
     img = Image.open(image_path).convert('RGB')
