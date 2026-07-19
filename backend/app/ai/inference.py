@@ -61,12 +61,29 @@ def run_vision_inference(image_path: str) -> dict:
         
     type_data = json.loads(result_type.stdout.strip())
     
-    fracture_type = type_data["fracture_type"]
-    classification_confidence = type_data["confidence"]
-    binary_conf = round(min(0.98, max(0.86, classification_confidence + 0.04)), 4)
+    # --- Dual-Engine Fusion: Call Gemini Multimodal Vision ---
+    from app.services.gemini_service import analyze_image_vision
+    vision_fusion = analyze_image_vision(image_path)
     
+    if vision_fusion is not None:
+        # Gemini Vision succeeded, use it as primary truth
+        fracture_detected = vision_fusion.get("fracture_detected", True)
+        fracture_type = vision_fusion.get("fracture_type", type_data["fracture_type"])
+        if fracture_type == "None" or not fracture_detected:
+            fracture_detected = False
+            fracture_type = "None"
+        classification_confidence = vision_fusion.get("confidence", type_data["confidence"])
+        binary_conf = round(min(0.98, max(0.86, classification_confidence + 0.04)), 4)
+    else:
+        # Fallback to local PyTorch models
+        is_fracture = (status == 'fractured')
+        fracture_detected = is_fracture
+        fracture_type = type_data["fracture_type"] if is_fracture else "None"
+        classification_confidence = type_data["confidence"] if is_fracture else 0.0
+        binary_conf = confidence
+        
     return {
-        "fracture_detected": True,
+        "fracture_detected": fracture_detected,
         "binary_confidence": binary_conf,
         "fracture_type": fracture_type,
         "classification_confidence": classification_confidence,

@@ -194,3 +194,37 @@ def get_clean_scan_analysis() -> GeminiStructuredOutput:
             TimelineEvent(title="Pipeline Conclusion", description="ResNet-50 binary detector classified the scan as clear of fractures.")
         ]
     )
+
+def analyze_image_vision(image_path: str) -> dict:
+    """
+    Uses Gemini Multimodal Vision to inspect the raw X-ray scan directly.
+    Provides diagnostic consensus checks alongside the local PyTorch features.
+    """
+    if not settings.GEMINI_API_KEY or settings.GEMINI_API_KEY.strip() in ("", "DUMMY_KEY", "YOUR_GEMINI_API_KEY"):
+        return None
+        
+    try:
+        from PIL import Image
+        import json
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        img = Image.open(image_path).convert('RGB')
+        
+        prompt = """
+        Analyze this digital orthopedic X-ray scan. State whether a bone fracture is present or not.
+        Return a JSON object with:
+        1. 'fracture_detected': boolean (true if a bone break/crack is present, false if normal/healthy bone)
+        2. 'fracture_type': string (select from 'Avulsion fracture', 'Comminuted fracture', 'Compression-Crush fracture', 'Fracture Dislocation', 'Greenstick fracture', 'Hairline Fracture', 'Impacted fracture', 'Intra-articular fracture', 'Longitudinal fracture', 'Oblique fracture', 'Pathological fracture', 'Spiral Fracture', or 'None' if healthy/clear)
+        3. 'confidence': float between 0.0 and 1.0 representing diagnostic confidence.
+        """
+        
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=[prompt, img],
+            config={
+                'response_mime_type': 'application/json'
+            }
+        )
+        return json.loads(response.text.strip())
+    except Exception as e:
+        print(f"Gemini vision check failed (falling back to PyTorch local engine): {str(e)}")
+        return None
