@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { TopNav, type View } from '@/components/top-nav'
 import { LandingHero } from '@/components/landing-hero'
@@ -13,6 +13,7 @@ import { ReportView } from '@/components/report-view'
 import { AmbientBackground } from '@/components/ambient-background'
 import { detectModality, type ModalityResult } from '@/lib/modality-detector'
 import { useAnalyzeStudy } from '@/hooks/useAnalyzeStudy'
+import { pingBackendWarmup } from '@/services/api'
 
 export default function Page() {
   const [view, setView] = useState<View>('landing')
@@ -24,8 +25,15 @@ export default function Page() {
     modality: 'Radiography',
   })
   const [fileObj, setFileObj] = useState<File | null>(null)
+  const [isWarmingUp, setIsWarmingUp] = useState(false)
 
   const analyzeMutation = useAnalyzeStudy()
+
+  // Proactively wake up Render free-tier container in background on page load
+  useEffect(() => {
+    setIsWarmingUp(true)
+    pingBackendWarmup().then(() => setIsWarmingUp(false)).catch(() => setIsWarmingUp(false))
+  }, [])
 
   const handleNavigate = useCallback((newView: View) => {
     setView(newView)

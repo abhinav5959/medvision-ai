@@ -165,6 +165,17 @@ export function AnalysisPipeline({ isPending, isSuccess, isError, error, onCompl
           {/* Progress Bar */}
           <ProgressBar value={progressPct} max={100} tone={isError ? 'critical' : 'cyan'} />
 
+          {!isError && isPending && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center font-mono text-[11px] text-cyan/70 flex items-center justify-center gap-2"
+            >
+              <span className="h-2 w-2 rounded-full bg-cyan animate-ping" />
+              <span>Connecting to Neural Engine... (Free-tier cloud container warm-up active)</span>
+            </motion.div>
+          )}
+
           {/* Steps */}
           <Timeline>
             {pipelineSteps.map((step, i) => {

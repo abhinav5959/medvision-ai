@@ -8,6 +8,23 @@ const getSeverityTone = (severity?: string): 'normal' | 'attention' | 'critical'
   return 'normal'
 }
 
+export const pingBackendWarmup = async (): Promise<boolean> => {
+  let healthUrl = '/health'
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    const base = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')
+    healthUrl = `${base}/health`
+  } else if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    healthUrl = 'http://localhost:8000/health'
+  }
+
+  try {
+    const res = await fetch(healthUrl, { method: 'GET' })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 export const analyzeOrthopedicScan = async (file: File): Promise<AnalysisResult> => {
   const formData = new FormData()
   formData.append('file', file)
@@ -20,11 +37,12 @@ export const analyzeOrthopedicScan = async (file: File): Promise<AnalysisResult>
     endpoint = 'http://localhost:8000/api/v1/orthopedics/analyze'
   }
 
-  // Automatic retry logic to handle Render free tier cold-starts (502 / gateway timeouts)
+  // Extended 10-attempt retry window (40s) to gracefully absorb Render free-tier cold starts
   let response: Response | null = null
   let lastError: any = null
+  const MAX_ATTEMPTS = 10
 
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       response = await fetch(endpoint, {
         method: 'POST',
@@ -34,8 +52,8 @@ export const analyzeOrthopedicScan = async (file: File): Promise<AnalysisResult>
       if (response.ok) break
       
       // If server returned 502/503/504 (Render cold-start spin up), retry after delay
-      if ([502, 503, 504].includes(response.status) && attempt < 3) {
-        await new Promise((res) => setTimeout(res, 3000 * attempt))
+      if ([502, 503, 504].includes(response.status) && attempt < MAX_ATTEMPTS) {
+        await new Promise((res) => setTimeout(res, 4000))
         continue
       }
       
@@ -43,9 +61,9 @@ export const analyzeOrthopedicScan = async (file: File): Promise<AnalysisResult>
       throw new Error(errorData?.message || `Server returned status ${response.status}`)
     } catch (err: any) {
       lastError = err
-      if (attempt < 3 && (err.name === 'TypeError' || err.message?.includes('fetch'))) {
-        // Network error (often CORS/502 on spin-up), retry after delay
-        await new Promise((res) => setTimeout(res, 3000 * attempt))
+      if (attempt < MAX_ATTEMPTS && (err.name === 'TypeError' || err.message?.includes('fetch') || err.message?.includes('Failed'))) {
+        // Network error (often CORS/502 on spin-up), retry after 4s delay
+        await new Promise((res) => setTimeout(res, 4000))
         continue
       }
       throw err
