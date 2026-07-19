@@ -36,19 +36,22 @@ def get_gemini_analysis(fracture_type: str, type_confidence: float) -> GeminiStr
     Maintain strict professionalism. Do not fabricate information that cannot be clinically inferred for a {fracture_type}. If there is standard clinical uncertainty, clearly express it.
     """
     
+    # Check key validity
+    if not settings.GEMINI_API_KEY or settings.GEMINI_API_KEY.strip() in ("", "DUMMY_KEY", "YOUR_GEMINI_API_KEY"):
+        print("GEMINI_API_KEY not configured. Using clinical fallback structure.")
+        return get_fallback_analysis(fracture_type, type_confidence)
+
     try:
-        # Initialize Google GenAI client
         client = genai.Client(api_key=settings.GEMINI_API_KEY)
         
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt,
             config={
                 'response_mime_type': 'application/json',
                 'response_schema': GeminiStructuredOutput,
             }
         )
-        # return parsed Pydantic object
         if response.parsed:
             return response.parsed
         else:
