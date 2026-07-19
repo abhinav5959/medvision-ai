@@ -8,8 +8,10 @@ const getSeverityTone = (severity?: string): 'normal' | 'attention' | 'critical'
   return 'normal'
 }
 
+const PRODUCTION_BACKEND_URL = 'https://medvision-ai-production.up.railway.app'
+
 export const pingBackendWarmup = async (): Promise<boolean> => {
-  let healthUrl = '/health'
+  let healthUrl = `${PRODUCTION_BACKEND_URL}/health`
   if (process.env.NEXT_PUBLIC_API_URL) {
     const base = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')
     healthUrl = `${base}/health`
@@ -29,7 +31,7 @@ export const analyzeOrthopedicScan = async (file: File): Promise<AnalysisResult>
   const formData = new FormData()
   formData.append('file', file)
 
-  let endpoint = '/api/v1/orthopedics/analyze'
+  let endpoint = `${PRODUCTION_BACKEND_URL}/api/v1/orthopedics/analyze`
   if (process.env.NEXT_PUBLIC_API_URL) {
     const base = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')
     endpoint = `${base}/api/v1/orthopedics/analyze`
