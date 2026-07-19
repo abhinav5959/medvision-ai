@@ -45,11 +45,11 @@ def run_quality(image_path):
     height, width = img.shape
     
     # 1. Check Resolution
-    if width < 150 or height < 150:
+    if width < 32 or height < 32:
         print(json.dumps({
             "analysis_possible": False,
-            "reason": f"Resolution too low ({width}x{height}px). Minimum required is 150x150px.",
-            "recommendation": "Please upload a higher-resolution digital scan."
+            "reason": f"Resolution too low ({width}x{height}px). Minimum required is 32x32px.",
+            "recommendation": "Please upload a valid digital scan."
         }))
         return
 
