@@ -45,7 +45,7 @@ RUN python3 -m venv /app/venv && \
 # Write a startup script to run both Next.js and FastAPI
 RUN echo '#!/bin/sh\n\
 echo "Starting FastAPI backend locally..."\n\
-/app/venv/bin/python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 &\n\
+(cd /app/backend && /app/venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000) &\n\
 echo "Starting Next.js frontend on port \$PORT..."\n\
 exec node server.js\n\
 ' > /app/start.sh && chmod +x /app/start.sh
