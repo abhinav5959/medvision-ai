@@ -42,6 +42,9 @@ COPY backend/.env ./backend/.env
 RUN python3 -m venv /app/venv && \
     /app/venv/bin/pip install --no-cache-dir -r backend/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
+# Validate that FastAPI and all Python imports compile successfully at build-time
+RUN /app/venv/bin/python -c "import sys; sys.path.insert(0, '/app/backend'); from app.main import app; print('FastAPI imported successfully!')"
+
 # Write a startup script to run both Next.js and FastAPI
 RUN echo '#!/bin/sh\n\
 echo "Starting FastAPI backend locally..."\n\
