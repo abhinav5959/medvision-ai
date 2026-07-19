@@ -145,7 +145,7 @@ export function ResultView({ result, onNavigate }: ResultViewProps) {
                 <AnimatePresence>
                   {mode === 'heatmap' && result.gradcamUrl && (
                     <motion.img
-                      src={`http://localhost:8000${result.gradcamUrl}`}
+                      src={result.gradcamUrl.startsWith('data:') || result.gradcamUrl.startsWith('http') ? result.gradcamUrl : `http://localhost:8000${result.gradcamUrl}`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}

@@ -175,17 +175,18 @@ export function HolographicBody({
                 className="cursor-pointer"
                 style={{ opacity: isIlluminated ? 1 : 0.4, transition: 'opacity 0.3s ease-out' }}
               >
-                <circle cx={organ.cx} cy={organ.cy} r={organ.r + 8} fill="transparent" />
+                <circle cx={organ.cx ?? 0} cy={organ.cy ?? 0} r={(organ.r ?? 6) + 8} fill="transparent" />
                 {isIlluminated && (
-                  <motion.circle cx={organ.cx} cy={organ.cy} r={organ.r + 6}
+                  <motion.circle cx={organ.cx ?? 0} cy={organ.cy ?? 0} r={(organ.r ?? 6) + 6}
                     fill="none" stroke={organ.color} strokeWidth="1"
                     animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
+                    style={{ transformOrigin: `${organ.cx ?? 0}px ${organ.cy ?? 0}px` }}
                   />
                 )}
-                <motion.circle cx={organ.cx} cy={organ.cy} r={organ.r} fill={organ.color}
+                <motion.circle cx={organ.cx ?? 0} cy={organ.cy ?? 0} r={organ.r ?? 6} fill={organ.color}
                   animate={{ scale: pulseScale }}
-                  style={{ filter: `drop-shadow(0 0 ${isIlluminated ? 12 + prox * 8 : 4}px ${organ.glowColor})` }}
+                  style={{ transformOrigin: `${organ.cx ?? 0}px ${organ.cy ?? 0}px`, filter: `drop-shadow(0 0 ${isIlluminated ? 12 + prox * 8 : 4}px ${organ.glowColor})` }}
                 />
                 {isIlluminated && (
                   <text x={organ.cx + 20} y={organ.cy + 4} fill={organ.color}

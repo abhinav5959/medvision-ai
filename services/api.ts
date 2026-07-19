@@ -12,15 +12,48 @@ export const analyzeOrthopedicScan = async (file: File): Promise<AnalysisResult>
   const formData = new FormData()
   formData.append('file', file)
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-  const response = await fetch(`${apiUrl}/api/v1/orthopedics/analyze`, {
-    method: 'POST',
-    body: formData,
-  })
+  let endpoint = '/api/v1/orthopedics/analyze'
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    const base = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')
+    endpoint = `${base}/api/v1/orthopedics/analyze`
+  } else if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    endpoint = 'http://localhost:8000/api/v1/orthopedics/analyze'
+  }
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null)
-    throw new Error(errorData?.message || 'Failed to analyze scan')
+  // Automatic retry logic to handle Render free tier cold-starts (502 / gateway timeouts)
+  let response: Response | null = null
+  let lastError: any = null
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+      })
+      
+      if (response.ok) break
+      
+      // If server returned 502/503/504 (Render cold-start spin up), retry after delay
+      if ([502, 503, 504].includes(response.status) && attempt < 3) {
+        await new Promise((res) => setTimeout(res, 3000 * attempt))
+        continue
+      }
+      
+      const errorData = await response.json().catch(() => null)
+      throw new Error(errorData?.message || `Server returned status ${response.status}`)
+    } catch (err: any) {
+      lastError = err
+      if (attempt < 3 && (err.name === 'TypeError' || err.message?.includes('fetch'))) {
+        // Network error (often CORS/502 on spin-up), retry after delay
+        await new Promise((res) => setTimeout(res, 3000 * attempt))
+        continue
+      }
+      throw err
+    }
+  }
+
+  if (!response || !response.ok) {
+    throw lastError || new Error('Failed to connect to AI server. Please retry.')
   }
 
   const data: AnalysisResponseDTO = await response.json()
