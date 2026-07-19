@@ -55,6 +55,20 @@ app.add_exception_handler(APIException, api_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(StarletteHTTPException, starlette_http_exception_handler)
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    import traceback
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error_code": "INTERNAL_SERVER_ERROR",
+            "message": str(exc),
+            "traceback": traceback.format_exc()
+        }
+    )
+
 # Add deployment health check endpoints
 @app.get("/health", tags=["System"])
 def health_check():
