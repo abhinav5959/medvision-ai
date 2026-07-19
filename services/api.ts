@@ -12,10 +12,7 @@ const PRODUCTION_BACKEND_URL = 'https://medvision-ai-production.up.railway.app'
 
 export const pingBackendWarmup = async (): Promise<boolean> => {
   let healthUrl = `${PRODUCTION_BACKEND_URL}/health`
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    const base = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')
-    healthUrl = `${base}/health`
-  } else if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     healthUrl = 'http://localhost:8000/health'
   }
 
@@ -32,10 +29,7 @@ export const analyzeOrthopedicScan = async (file: File): Promise<AnalysisResult>
   formData.append('file', file)
 
   let endpoint = `${PRODUCTION_BACKEND_URL}/api/v1/orthopedics/analyze`
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    const base = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')
-    endpoint = `${base}/api/v1/orthopedics/analyze`
-  } else if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     endpoint = 'http://localhost:8000/api/v1/orthopedics/analyze'
   }
 
